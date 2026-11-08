@@ -1,0 +1,239 @@
+[
+  {
+    "name": "Sample journal create, edit, exclude and delete",
+    "sanity": true,
+    "viewport": "desktop",
+    "covers": [
+      "sample tour",
+      "daily mood",
+      "chat modes",
+      "sample chat",
+      "entry create read update delete",
+      "journal search",
+      "inclusion control",
+      "delete confirmation",
+      "opt-in wellbeing guide",
+      "feeling-aware sample guide",
+      "guide from existing log",
+      "listen mode retained",
+      "weekly monthly off sample preference",
+      "calendar export",
+      "activity review sample",
+      "checkin save to journal",
+      "weekly summary sample",
+      "monthly summary sample",
+      "journal period selection",
+      "mood counts",
+      "summary download",
+      "sunshine navigation",
+      "interactive mood faces",
+      "clickable week entries",
+      "journal quests",
+      "daily writing progress",
+      "past-entry revisit progress",
+      "history month and feeling filters",
+      "history ordering",
+      "milestone badges",
+      "sample reminder guardrail",
+      "journal mood emoji and label",
+      "future persona sample",
+      "journal-based sample chat",
+      "choose persona next step",
+      "sample avatar presentation"
+    ],
+    "description": "Verifies the sample workflow without requiring an account.",
+    "steps": [
+      "Stay in the labelled sample tour. In the sunshine dashboard select Okay and open Let’s talk about it. Verify the selected face is highlighted and chat opens.",
+      "Choose Just listen. Send I took a quiet walk and felt more focused. Confirm the assistant response is labelled as a sample.",
+      "Choose Daily wellbeing guide and select Low in Feeling today. Press Get my daily guide without typing again. Verify a labelled sample daily guide with Notice, Try, Next step, Check in and the selected feeling. Switch back to Just listen.",
+      "Save reflection. Open Journal and search for quiet walk. Edit that entry to I took a quiet walk and planned tomorrow. Uncheck inclusion and save changes.",
+      "Verify edited text and excluded status. Delete the entry and confirm deletion.",
+      "Close any editor and open Profile. In Your regular check-in choose Monthly and save reminder preference. Verify it explicitly says sample reminders will not send. Download Add to calendar. Start activity check-in, choose This month, enter I learned a new skill and made time to rest. Get my review guide and verify a labelled sample exercise and next step. Save check-in and finish, then verify the activity report in Journal.",
+      "Open Journal. In the journal summary card select Weekly summary and Generate summary. Verify a Sample Weekly journal summary, date range, included entry count and mood counts. Select Monthly summary, generate again, verify Sample Monthly journal summary and download it.",
+      "Return to Today and click a day in the week strip with a saved sample entry. Verify it opens the journal editor. Close it. Click Reminders and verify Profile shows reminder settings.",
+      "Open Today and inspect Your journal quests. Verify writing today marks Write today’s page complete after a saved entry. Click Browse past journals, open an entry dated before today and close it. Return to Today and verify Revisit a past moment complete. Press Enable daily reminder in sample mode and verify sign-in guidance without a notification.",
+      "Open Journal and verify All past journals and complete history loaded. Filter month to 2000-01 and verify an empty result. Clear filters, select a feeling and verify only matching entries appear. Select Oldest first and verify chronological order.",
+      "Open Journal and verify every saved entry displays a mood emoji beside its written mood label. Open Future Me, check Use all my included journal entries and press Build my persona. Verify Sample portrait, strengths, patterns, and next steps. Ask What should I focus on next? and verify a clearly labelled sample future-self reply. Choose a suggested step and verify it appears on Today."
+    ],
+    "expected": "The edited entry is shown with excluded status before deletion and is absent afterwards."
+  },
+  {
+    "name": "Protected account and durable journal",
+    "viewport": "desktop",
+    "covers": [
+      "sign in",
+      "adult setup validation",
+      "profile goals",
+      "protected user scoped persistence",
+      "sign out",
+      "reload persistence",
+      "profile settings",
+      "export loaded journal",
+      "authenticated reminder persistence",
+      "opt out",
+      "weekly monthly preference switching",
+      "push opt in guidance",
+      "real AI journal summary",
+      "account scoped summary sources",
+      "summary inclusion guard",
+      "date filtered journal summaries",
+      "GET /api/journal-tasks",
+      "PUT /api/journal-tasks/reminder",
+      "POST /api/journal-tasks/review",
+      "server scoped daily reminder preference",
+      "all journal pagination",
+      "POST /api/future-self/persona",
+      "POST /api/future-self/chat",
+      "GET /api/future-self/avatar",
+      "included source ownership and consent"
+    ],
+    "description": "Verifies private account setup and persistent saved entries.",
+    "steps": [
+      "Use Create my space to sign in with the test account. If setup appears enter Test Reader, birthday 1990-05-10, choose Work and accept processing consent.",
+      "Create a new conversation with I completed a focused work session. Save reflection.",
+      "Reload and open Journal. Verify the entry remains. Open Profile and export the loaded journal.",
+      "Open Profile, set Reminder frequency to Weekly and save. Reload and verify weekly reminders remain. Switch to Monthly and save, then set Off and save. Verify Reminders off after reload. Browser notification permission must only be requested by Enable browser reminders, never by saving the preference.",
+      "Open Journal and generate the current Monthly summary. Verify the saved work-session entry is represented by a date-based reflection with included entry count. Change Summary reference date to 2000-01-15 and generate; verify no included entries rather than invented content.",
+      "Open Today. Verify journal tasks load for the account. Enable daily reminder and allow browser notifications if supported. Verify enabled status then turn it off and verify off status after reload. If browser notifications are blocked, verify a visible permission error and no claim that reminders were enabled. Open Journal and verify all pages finish loading and the complete-history count appears.",
+      "Open Future Me while signed in. Agree to use included entries and build the persona. Verify the source count and dated strengths without a fixed diagnosis. Ask What should I focus on next? and verify a meaningful reply grounded in the journal. Reopen Future Me to verify saved-avatar retrieval produces either the private image or an empty state.",
+      "Sign out. Verify only the labelled sample space appears, not the private work-session entry."
+    ],
+    "expected": "Private journal survives reload for its signed-in user and is not shown after sign-out. An export downloads."
+  },
+  {
+    "name": "AI reflection and error recovery",
+    "viewport": "desktop",
+    "covers": [
+      "real AI chat response",
+      "AI failure and retry",
+      "draft retention",
+      "included journal reflection",
+      "next action device persistence",
+      "AI daily guide",
+      "guide request failure and retry",
+      "guide consent disclosure",
+      "real AI activity review",
+      "activity guide error recovery",
+      "review log persistence",
+      "journal summary failure retry",
+      "history page failure and retry",
+      "task reminder failure handling",
+      "persona generation failure retry",
+      "avatar failure preserves current image",
+      "POST /api/future-self/avatar",
+      "DELETE /api/future-self/avatar"
+    ],
+    "description": "Verifies AI failures remain actionable and saved reflections can inform a next step.",
+    "qa_faults": [
+      {
+        "method": "POST",
+        "path": "/api/chat",
+        "status": 503,
+        "body_json": {
+          "error": "Assistant temporarily unavailable. Please retry."
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/checkin",
+        "status": 503,
+        "body_json": {
+          "error": "Review unavailable. Retry."
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/journal-summary",
+        "status": 503,
+        "body_json": {
+          "error": "Summary unavailable. Please retry."
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/journal-tasks/reminder",
+        "status": 503,
+        "body_json": {
+          "error": "Reminder temporarily unavailable"
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/future-self/avatar",
+        "status": 503,
+        "body_json": {
+          "error": "Avatar unavailable"
+        }
+      }
+    ],
+    "steps": [
+      "Sign in and complete adult setup if needed. Open my daily wellbeing guide, select Low in Feeling today and send I feel overwhelmed by work today.",
+      "Verify an error and Retry reply are available and the user message remains visible. Verify the guide explains it is optional wellbeing support, not professional therapy.",
+      "Save reflection despite the failed assistant reply, then choose Read my reflection on Today. Verify a useful reflection or actionable error is shown.",
+      "Open Future Me, enter Take a ten-minute walk tomorrow as My next small step and save. Reload.",
+      "Open Profile and start activity check-in. Enter I finished a work project but felt tired. Press Get my review guide. Verify a visible retry message and that the activity text remains. Save check-in and finish and confirm the report appears in Journal.",
+      "Open Journal, select the current week and Generate summary. Verify a visible retry error and that the journal entries remain unchanged.",
+      "Open Future Me, consent and build the persona from saved included entries. Choose presentation and skin tone, then Generate my avatar. Verify a visible failure message while the existing image or empty state remains. If a saved avatar exists, use Remove avatar, confirm, reopen Future Me and verify it is removed."
+    ],
+    "expected": "Failed chat does not lose the user text; the entry can still be saved. The chosen step remains visible on Today after reload."
+  },
+  {
+    "name": "Mobile birthday sample and playback controls",
+    "viewport": "mobile",
+    "covers": [
+      "mobile navigation",
+      "birthday sample",
+      "60 second captions",
+      "pause resume",
+      "sample completion",
+      "future limitations",
+      "responsive sunshine layout",
+      "bottom mobile navigation",
+      "readable mobile typography",
+      "accessible task touch targets"
+    ],
+    "description": "Verifies a mobile user can try the separate sample encounter and reach an action card.",
+    "steps": [
+      "On mobile verify the sunshine dashboard fits the screen and mood choices can be tapped. Verify the week strip scrolls within its section without widening the page.",
+      "Remain in sample mode and use the bottom Future Me tab.",
+      "Press Try the sample minute. Verify the sample label, captions and countdown.",
+      "Pause the experience; verify Continue is available. Continue and allow the 60-second experience to finish.",
+      "Press Choose my next step and save Make time for a friend as a next step.",
+      "Return to Today and inspect the quest rows on mobile. Verify task buttons and daily reminder control are readable and can be reached without horizontal page overflow."
+    ],
+    "expected": "The sample encounter supports pause and completion, returns to Future Me, and saves a visible action card without pretending to be a personal prediction."
+  },
+  {
+    "name": "Birthday eligibility guard and empty entry validation",
+    "viewport": "mobile",
+    "covers": [
+      "birthday lock",
+      "birthday immutable setup",
+      "empty entry guardrail",
+      "signed in navigation",
+      "no unsupported voice claims",
+      "empty guide validation",
+      "mobile guide mode and mood selector",
+      "empty activity guardrail",
+      "mobile checkin settings",
+      "empty summary period guard",
+      "excluded summary source guard",
+      "mobile summary controls",
+      "persona missing-consent guardrail",
+      "no source entries guardrail",
+      "birthday preserved separately"
+    ],
+    "description": "Verifies off-birthday users cannot open the annual message and empty journal entries are rejected.",
+    "steps": [
+      "Sign in with an adult account whose saved birthday is 1990-05-10 and whose birthday is not today. Complete setup if required.",
+      "Open Future Me. Confirm the personal birthday encounter is disabled and labelled Opens on your birthday.",
+      "Open my daily wellbeing guide. Press Get my daily guide with no conversation or draft. Verify Share how you feel first is shown and no AI guide is created.",
+      "Open Today chat and press Save reflection without typing anything. Verify a validation message and no saved entry.",
+      "Open Profile then Edit name and goals. Verify the saved birthday field is disabled.",
+      "Close profile setup and start activity check-in from Profile. Leave activities empty and press Get my review guide, then Save check-in and finish. Both actions must show validation and create no journal record.",
+      "After closing activity check-in, open Journal on mobile. Select Monthly summary with reference date 2000-01-15 and generate. Verify the empty-period message and no summary. Clear the date and generate; verify date validation.",
+      "Open Future Me and press Build my persona without checking consent. Verify the consent validation message. Verify the separate annual birthday encounter remains locked off-birthday."
+    ],
+    "expected": "The off-birthday personal reveal is unavailable, empty entries are blocked, and the birthday cannot be changed through the profile form."
+  }
+]

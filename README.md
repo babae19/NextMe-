@@ -80,8 +80,24 @@ The exported workflow specifications are in `tests/tests.json` and run through A
 ## Export provenance
 
 - AppDeploy app: `nextme-stgh67`
-- Source snapshot: `1792887331528`
-- Export date: 2026-10-25
-- All 18 source/resource paths in that snapshot are included unchanged.
+- Source snapshot: `1793206754658`
+- Recovery date: 2026-11-08
+- All 21 source/resource paths from the current snapshot have been recovered. Repository maintenance files and package metadata are added separately.
 
 No open-source licence has been added; the repository owner can choose one.
+
+## Repository maintenance
+
+Use Node.js 22 (`nvm use`). Run `npm test` for dependency-free source integrity checks covering scheduled handlers, illustration files, relative imports, and browser scenario metadata. GitHub Actions runs these checks on pushes and pull requests. These checks do not execute the app or replace AppDeploy browser testing.
+
+Dependabot checks npm dependencies and GitHub Actions weekly. Review and validate its pull requests in AppDeploy before merging. Keep secrets and personal journal exports out of GitHub; local environment files are ignored.
+
+### Deployment and recovery
+
+The running app remains managed by AppDeploy (`nextme-stgh67`). Pushing to this repository does **not** deploy it. Deploy source changes through AppDeploy, validate authenticated journal operations and opt-in reminders there, and record the resulting snapshot. Before a release, preserve the previous AppDeploy version so it can be restored if needed. Export subsequent app changes back to GitHub to avoid source drift.
+
+All three PNG illustrations are included under `public/resources/`. Historical app logs reported illustration loading failures and avatar-generation HTTP 503 responses. Repository checks verify the recovered PNG files, but do not establish that live resource delivery or the managed image-generation service has recovered.
+
+### Current verification limits
+
+The source was recovered from the ready AppDeploy deployment on 8 November 2026. Scheduled jobs reported successful last runs. Full local build and TypeScript validation require the real platform SDK integration; no substitute SDK or fake authentication is supplied. Account deletion and legal-policy completion remain release requirements for a wider launch.
