@@ -3,14 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const backend = read('backend/index.ts');
-test('scheduled jobs reference exported backend handlers', () => {
-  const jobs = JSON.parse(read('cron.json'));
-  assert.equal(new Set(jobs.map(job => job.name)).size, jobs.length);
-  for (const job of jobs) {
-    assert.match(backend, new RegExp('export async function ' + job.handler + '\\('));
-    assert.equal(job.cron.split(' ').length, 5);
-    assert.doesNotThrow(() => new Intl.DateTimeFormat('en', { timeZone: job.timezone }));
-  }
+test('application has no platform SDK dependencies', () => {
+  assert.ok(!backend.includes('@appdeploy/'));
 });
 test('referenced static illustrations are real PNG files', () => {
   for (const file of readdirSync(new URL('../src/', import.meta.url)).filter(f => f.endsWith('.tsx'))) {

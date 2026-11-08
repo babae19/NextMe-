@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/*.test.mjs"
+    "test": "node --experimental-strip-types --test scripts/*.test.mjs",
+    "start": "node --experimental-strip-types backend/server.ts",
+    "dev:server": "node --experimental-strip-types --watch backend/server.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "lucide-react": "^0.469.0",
@@ -28,6 +31,6 @@
     "vite": "^6.0.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
   }
 }

@@ -1,0 +1,24 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+process.env.NODE_ENV='test';process.env.DATABASE_PATH=':memory:';
+const { server }=await import('../backend/server.ts');
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const base='http://127.0.0.1:'+server.address().port;
+const call=async(path,method='GET',body,cookie)=>fetch(base+path,{method,headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},...(body?{body:JSON.stringify(body)}:{})});
+let cookie;
+test('independent accounts, persistence, isolation and access controls',async()=>{
+ let r=await call('/api/entries');assert.equal(r.status,401);
+ r=await call('/api/auth/register','POST',{email:'one@example.com',password:'long-private-password'});assert.equal(r.status,200);cookie=r.headers.get('set-cookie').split(';')[0];
+ r=await call('/api/profile','PUT',{name:'One',birthday:'1990-01-01',timezone:'Africa/Freetown',consent:true,goals:[]},cookie);assert.equal(r.status,200);
+ r=await call('/api/entries','POST',{id:'entry-123456789',text:'A private journal',mood:'Happy',include:true},cookie);assert.equal(r.status,200);
+ r=await call('/api/entries','GET',null,cookie);assert.equal((await r.json()).items[0].text,'A private journal');
+ r=await call('/api/auth/register','POST',{email:'two@example.com',password:'another-long-password'});const other=r.headers.get('set-cookie').split(';')[0];
+ r=await call('/api/entries','GET',null,other);assert.deepEqual((await r.json()).items,[]);
+ r=await call('/api/entries/entry-123456789','PUT',{text:'intrusion'},other);assert.equal(r.status,404);
+ r=await fetch(base+'/api/auth/logout',{method:'POST',headers:{Origin:'https://attacker.example','Content-Type':'application/json',Cookie:cookie},body:'{}'});assert.equal(r.status,403);
+ r=await call('/api/auth/logout','POST',{},cookie);assert.equal(r.status,200);
+ r=await call('/api/entries','GET',null,cookie);assert.equal(r.status,401);
+ r=await call('/api/auth/login','POST',{email:'one@example.com',password:'long-private-password'});assert.equal(r.status,200);
+ const fresh=r.headers.get('set-cookie').split(';')[0];r=await call('/api/entries','GET',null,fresh);assert.equal((await r.json()).items.length,1);
+});
+test.after(()=>new Promise(r=>server.close(r)));

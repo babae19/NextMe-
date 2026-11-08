@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { api } from '@appdeploy/client';
+import { api } from './client';
 import { ArrowRight, Check, MessageCircle, RefreshCw, Send, Sparkles, Trash2, UserRound, Volume2 } from 'lucide-react';
 
 type Entry = { id: string; text: string; mood: string; include: boolean; created: string };

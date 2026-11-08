@@ -1,4 +1,4 @@
-import { router, json, error, requireAuth, db, ai, notifications } from '@appdeploy/sdk';
+import { router, json, error, requireAuth, db, ai, notifications } from './runtime.ts';
 
 type Profile = {
   name: string;
@@ -53,45 +53,7 @@ function nextReminder(cadence: 'weekly' | 'monthly') {
   }
   return next.toISOString();
 }
-export async function weeklyCheckinReminder() {
-  const result = await notifications.sendToTopic({
-    topic: 'nextme-weekly',
-    notification: { title: 'Time for your NextMe check-in', body: 'Take a moment to reflect on your week and choose your next small step.', url: 'https://nextme-stgh67.v2.appdeploy.ai/' },
-    data: { kind: 'weekly-checkin' },
-    ttlSeconds: 86400,
-  });
-  if (result.failed) console.warn('Weekly reminder delivery failures:', result.failed);
-  return { statusCode: 200 };
-}
-export async function monthlyCheckinReminder() {
-  const result = await notifications.sendToTopic({
-    topic: 'nextme-monthly',
-    notification: { title: 'Time for your NextMe check-in', body: 'Reflect on the month and make room for your next chapter.', url: 'https://nextme-stgh67.v2.appdeploy.ai/' },
-    data: { kind: 'monthly-checkin' },
-    ttlSeconds: 86400,
-  });
-  if (result.failed) console.warn('Monthly reminder delivery failures:', result.failed);
-  return { statusCode: 200 };
-}
-
-
 type JournalProgress = { dailyReminder: boolean; lastReviewed?: string };
-export async function dailyJournalReminder() {
-  const result = await notifications.sendToTopic({
-    topic: 'nextme-daily-journal',
-    notification: {
-      title: 'A little space for your day',
-      body: 'Your NextMe journal is ready whenever you are. One small reflection counts.',
-      url: 'https://nextme-stgh67.v2.appdeploy.ai/',
-    },
-    data: { kind: 'daily-journal-task' },
-    ttlSeconds: 43200,
-  });
-  if (result.failed) console.warn('Daily journal reminder delivery failures:', result.failed);
-  return { statusCode: 200 };
-}
-
-
 type FutureSource = { id: string; text: string; mood: string; created: string };
 async function futureSources(userId: string, ids: unknown) {
   if (!Array.isArray(ids) || ids.length === 0 || ids.length > 2000 || ids.some(id => typeof id !== 'string' || id.length > 100)) throw new Error('Select between 1 and 2,000 included journal entries.');
@@ -479,6 +441,7 @@ export const handler = router({
         messages: { role: string; content: string }[];
         mode: string;
         mood?: string;
+        tone?: string;
       };
       const [profile] = await db.get<Profile>('profiles', [c.user!.userId]);
       if (!profile?.consent) return error('Complete your profile first.', 403);
@@ -495,6 +458,7 @@ export const handler = router({
         const response = await ai.generate({
           system:
             guide +
+            (b.tone === 'playful' ? ' Use light, friendly language. Gentle humour is optional; never joke about distress or pressure the user to be positive.' : b.tone === 'direct' ? ' Be clear, brief and practical. Offer one optional next step.' : ' Use calm, kind language without forced optimism.') +
             ' Current user-selected feeling: ' +
             (['Difficult', 'Low', 'Okay', 'Good', 'Great'].includes(b.mood || '') ? b.mood : 'Not specified') +
             (b.mode === 'Daily wellbeing guide'

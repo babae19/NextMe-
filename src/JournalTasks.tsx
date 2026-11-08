@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, notifications } from '@appdeploy/client';
+import { api, notifications } from './client';
 import { Award, Bell, BookOpen, CheckCircle2, Circle, Feather, Trophy } from 'lucide-react';
 import { journalDay } from './JournalSummary';
 

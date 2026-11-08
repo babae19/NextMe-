@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '@appdeploy/client';
+import { api } from './client';
 import { Download, Sparkles } from 'lucide-react';
 
 type Entry = { id: string; text: string; mood: string; include: boolean; created: string };

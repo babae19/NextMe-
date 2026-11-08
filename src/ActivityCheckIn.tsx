@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, notifications } from '@appdeploy/client';
+import { api, notifications } from './client';
 import { ArrowRight, Bell, CalendarDays, Check, X } from 'lucide-react';
 
 type Cadence = 'off' | 'weekly' | 'monthly';

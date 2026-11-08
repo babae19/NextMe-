@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, auth } from '@appdeploy/client';
+import { api, auth } from './client';
 import ActivityCheckIn from './ActivityCheckIn';
 import JournalSummary, { journalDay } from './JournalSummary';
 import JournalTasks from './JournalTasks';
 import FutureSelfStudio from './FutureSelfStudio';
 import { MoodLabel } from './MoodLabel';
 import SunshineHome from './SunshineHome';
+import PersonalSpace, { readPreferences } from './PersonalSpace';
 import {
   ArrowUpRight,
   ArrowRight,
@@ -20,7 +21,6 @@ import {
   Home,
   LockKeyhole,
   LogOut,
-  MessageCircle,
   Pause,
   Play,
   Plus,
@@ -84,6 +84,12 @@ const failText = (e: unknown) => {
   );
 };
 export default function App() {
+  const [preferences, setPreferences] = useState(readPreferences);
+  useEffect(() => {
+    document.documentElement.dataset.palette = preferences.palette;
+    document.documentElement.dataset.quiet = String(!preferences.motion);
+    try { localStorage.setItem('nextme-preferences', JSON.stringify(preferences)); } catch { /* Preferences still work for this visit. */ }
+  }, [preferences]);
   const [tab, setTab] = useState('Today');
   const [demo, setDemo] = useState(true);
   const [signed, setSigned] = useState(false);
@@ -225,7 +231,7 @@ export default function App() {
       await loadAccount();
     } catch (e) {
       setError(
-        'Sign-in could not finish. Allow popups and try again. ' + failText(e)
+        'Sign-in could not finish. ' + failText(e)
       );
     }
   }
@@ -281,7 +287,7 @@ export default function App() {
           },
         ]);
       else {
-        const r = await api.post('/api/chat', { messages: next, mode: selectedMode, mood });
+        const r = await api.post('/api/chat', { messages: next, mode: selectedMode, mood, tone: preferences.tone });
         setMessages([...next, { role: 'assistant', content: r.data.text }]);
       }
     } catch (e) {
@@ -553,6 +559,7 @@ export default function App() {
               </button>
             </div>
           )}
+          {tab === 'Today' && <PersonalSpace mood={mood} preferences={preferences} onPreferences={setPreferences} onStart={(prompt, selectedMode) => { setDraft(current => current.trim() ? current : prompt + '\n\n'); setMode(selectedMode); setChat(true); }} />}
           {tab === 'Today' && (
             <SunshineHome
               mood={mood}
