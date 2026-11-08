@@ -1,0 +1,11 @@
+import { useEffect, useState } from 'react';
+import { Send } from 'lucide-react';
+import { api } from './client';
+type Message={role:string;content:string};
+export default function BirthdayChat({demo,active,initialMessages}:{demo:boolean;active:boolean;initialMessages:Message[]}){
+ const [messages,setMessages]=useState<Message[]>(initialMessages);
+ const [draft,setDraft]=useState('');const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [image,setImage]=useState('');
+ useEffect(()=>{let live=true;if(!demo)api.get('/api/future-self/avatar').then(r=>{const a=r.data.avatar;if(live&&a)setImage('data:'+a.mimeType+';base64,'+a.data);}).catch(()=>{});return()=>{live=false;};},[demo]);
+ async function send(){if(!draft.trim()||busy||!active)return;setBusy(true);setError('');const value=draft.trim();try{const result=demo?{messages:[...messages,{role:'user',content:value},{role:'assistant',content:'Sample reply: your real meeting connects your diary with your saved life goals. What is one small action you could take this week?'}]}:(await api.post('/api/reveal/chat',{message:value})).data;setMessages(result.messages);setDraft('');}catch(e){setError(e instanceof Error?e.message:'Could not get a reply. Your draft is kept.');}finally{setBusy(false);}}
+ return <section className="birthday-chat" aria-label="Birthday conversation">{image&&<img src={image} className="birthday-avatar" alt="Your journal-inspired symbolic future-self avatar"/>}<h3>Ask future you</h3><p>Explore your goals, what is getting in the way, or one next step.</p><div className="birthday-thread" aria-live="polite">{messages.map((m,i)=><div className={'bubble '+m.role} key={i}>{m.content}</div>)}</div>{error&&<p role="alert">{error}</p>}<form className="composer" onSubmit={e=>{e.preventDefault();send();}}><textarea aria-label="Birthday meeting message" maxLength={4000} value={draft} disabled={!active} onChange={e=>setDraft(e.target.value)} placeholder={active?'What could help me reach my goals?':'This meeting has ended. Everyday future-self chat is still available.'}/><button className="light-button" disabled={!active||busy||!draft.trim()} aria-label="Send birthday message"><Send size={18}/>{busy?'Thinking…':'Send'}</button></form><small>Your five-minute window keeps running while narration is paused. Reloading does not restart it.</small></section>;
+}

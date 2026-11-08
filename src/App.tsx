@@ -4,6 +4,8 @@ import ActivityCheckIn from './ActivityCheckIn';
 import JournalSummary, { journalDay } from './JournalSummary';
 import JournalTasks from './JournalTasks';
 import FutureSelfStudio from './FutureSelfStudio';
+import LifeGoals from './LifeGoals';
+import BirthdayChat from './BirthdayChat';
 import { MoodLabel } from './MoodLabel';
 import SunshineHome from './SunshineHome';
 import PersonalSpace, { readPreferences } from './PersonalSpace';
@@ -126,6 +128,9 @@ export default function App() {
   const [completed, setCompleted] = useState(false);
   const [encounter, setEncounter] = useState('');
   const [seconds, setSeconds] = useState(0);
+  const [meetingExpiresAt, setMeetingExpiresAt] = useState(0);
+  const [meetingMessages, setMeetingMessages] = useState<Message[]>([]);
+  const [goalRevision, setGoalRevision] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [done, setDone] = useState(false);
   const [narrate, setNarrate] = useState(false);
@@ -135,15 +140,14 @@ export default function App() {
     if (auth.isSignedIn()) loadAccount().catch(e => setError(failText(e)));
   }, []);
   useEffect(() => {
-    if (!playing || !encounter) return;
-    const timer = window.setInterval(
-      () => setSeconds(s => Math.min(60, s + 1)),
-      1000
-    );
+    if (!encounter || !meetingExpiresAt || done) return;
+    const tick = () => setSeconds(Math.max(0, Math.min(300, 300 - Math.ceil((meetingExpiresAt - Date.now()) / 1000))));
+    tick();
+    const timer = window.setInterval(tick, 250);
     return () => clearInterval(timer);
-  }, [playing, encounter]);
+  }, [encounter, meetingExpiresAt, done]);
   useEffect(() => {
-    if (seconds === 60 && encounter && !done) {
+    if (seconds === 300 && encounter && !done) {
       setPlaying(false);
       window.speechSynthesis?.cancel();
       if (demo) {
@@ -396,9 +400,11 @@ export default function App() {
     setDone(false);
     setSeconds(0);
     try {
-      const text = demo
-        ? sampleText
-        : (await api.post('/api/reveal', {})).data.text;
+      const meeting = demo ? {text: sampleText, expiresAt: Date.now() + 300000, messages: []} : (await api.post('/api/reveal', {})).data;
+      if (meeting.completed) { setCompleted(true); throw new Error('This year’s meeting is complete.'); }
+      const text = meeting.text;
+      setMeetingExpiresAt(meeting.expiresAt);
+      setMeetingMessages(meeting.messages || []);
       setEncounter(text);
       setPlaying(true);
       if (narrate && 'speechSynthesis' in window) {
@@ -689,14 +695,17 @@ export default function App() {
           )}
           {tab === 'Future Me' && (
             <>
+              <section className="monthly-plan-link"><div><h3>A plan for your next month</h3><p>Turn your diary and life goals into practical recommendations.</p></div><button className="secondary" onClick={() => setTab('Journal')}>Open monthly advice<ArrowRight size={16}/></button></section>
+              <LifeGoals key={demo ? "sample-goals" : "account-goals"} demo={demo} onSaved={() => setGoalRevision(v => v + 1)} />
               <FutureSelfStudio
+                goalRevision={goalRevision}
                 demo={demo}
                 entries={entries}
                 onStep={value => { setStep(value); localStorage.setItem('nextme-step', value); }}
               />
               <div className="annual-encounter-heading">
                 <p className="eyebrow">YOUR BIRTHDAY RITUAL</p>
-                <h2>Your annual one-minute encounter.</h2>
+                <h2>Your annual five-minute meeting.</h2>
                 <p>The birthday experience stays separate from everyday future-self chat.</p>
               </div>
               <div className="future-page">
@@ -716,7 +725,7 @@ export default function App() {
                           : 'YOUR ANNUAL ENCOUNTER'}
                   </span>
                   <h2>
-                    One minute.
+                    Five minutes.
                     <br />A different perspective.
                   </h2>
                   <p>
@@ -744,11 +753,11 @@ export default function App() {
                     {busy
                       ? 'Preparing your encounter…'
                       : demo
-                        ? 'Try the sample minute'
+                        ? 'Try the sample meeting'
                         : completed
                           ? 'See you next birthday'
                           : eligible
-                            ? 'Begin my one minute'
+                            ? 'Begin my five minutes'
                             : 'Opens on your birthday'}
                     {!demo && !eligible ? (
                       <LockKeyhole size={16} />
@@ -756,7 +765,7 @@ export default function App() {
                       <Play size={16} />
                     )}
                   </button>
-                  <small>Always captioned. Pause whenever you need.</small>
+                  <small>Five minutes to read and chat. Pause narration whenever you need.</small>
                 </section>
                 <section className="card chapter">
                   <span className="icon-box teal">
@@ -817,8 +826,7 @@ export default function App() {
                 <CircleHelp size={18} />
                 <p>
                   This is a reflective experience, not a prediction or therapy.
-                  Your message uses up to 30 included entries. With limited
-                  entries, it will acknowledge that it knows less.
+                  Your meeting uses up to 2,000 included diary entries and your saved life goals. Long entries may be shortened. With limited evidence, it will acknowledge that it knows less.
                 </p>
               </div>
             </>
@@ -832,6 +840,7 @@ export default function App() {
               <p className="subtitle">
                 Choose what you share and what you keep.
               </p>
+              <button className="secondary" style={{marginBottom: 20}} onClick={() => setTab('Future Me')}><Sparkles size={16}/>Manage my life goals</button>
               <ActivityCheckIn
                 key={demo ? 'sample-checkin' : profile?.name || 'personal-checkin'}
                 demo={demo}
@@ -871,7 +880,7 @@ export default function App() {
                           setSetup(true);
                         }}
                       >
-                        Edit name and goals
+                        Edit name and interests
                       </button>
                       <button
                         className="text-button"
@@ -1255,14 +1264,14 @@ export default function App() {
             {done
               ? 'Carry one small action into the days ahead.'
               : encounter.split(/\n\s*\n/)[
-                  Math.min(3, Math.floor(seconds / 15))
+                  Math.min(3, Math.floor(seconds / 75))
                 ] || encounter}
           </p>
           <div className="progress">
-            <span style={{ width: (seconds / 60) * 100 + '%' }} />
+            <span style={{ width: (seconds / 300) * 100 + '%' }} />
           </div>
           <span className="timer">
-            0:{String(60 - seconds).padStart(2, '0')} remaining
+            {Math.floor((300 - seconds) / 60)}:{String((300 - seconds) % 60).padStart(2, '0')} remaining
           </span>
           {!done && (
             <button
@@ -1274,7 +1283,7 @@ export default function App() {
               }}
             >
               {playing ? <Pause size={16} /> : <Play size={16} />}{' '}
-              {playing ? 'Pause' : 'Continue'}
+              {playing ? 'Pause narration' : 'Continue narration'}
             </button>
           )}
           {done && (
@@ -1289,8 +1298,9 @@ export default function App() {
               <ArrowRight size={16} />
             </button>
           )}
+          <BirthdayChat key={meetingExpiresAt} demo={demo} active={!done && seconds < 300} initialMessages={meetingMessages} />
           <small>
-            A possibility, not a prediction. Captions advance across one minute.
+            A possibility, not a prediction. Your birthday meeting lasts five minutes.
           </small>
           {error && (
             <p role="alert">

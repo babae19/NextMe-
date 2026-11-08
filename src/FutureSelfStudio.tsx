@@ -18,7 +18,7 @@ const sample: Portrait = {
   focus: 'Make room for meaningful effort and time to recover.',
   nextSteps: ['Protect ten minutes for a quiet reset.', 'Choose one manageable step for an idea you care about.', 'Check in with someone you trust this week.'],
 };
-export default function FutureSelfStudio({ demo, entries, onStep }: { demo: boolean; entries: Entry[]; onStep: (step: string) => void }) {
+export default function FutureSelfStudio({ demo, entries, onStep, goalRevision }: { demo: boolean; entries: Entry[]; goalRevision: number; onStep: (step: string) => void }) {
   const [built, setBuilt] = useState<Built | null>(null);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState('');
@@ -33,9 +33,10 @@ export default function FutureSelfStudio({ demo, entries, onStep }: { demo: bool
   const ids = useRef<string[]>([]);
   useEffect(() => {
     setBuilt(null); setMessages([]); ids.current = [];
-  }, [entries]);
+  }, [entries, goalRevision]);
   useEffect(() => {
     let active = true;
+    setAvatar(null); setRemovedSample(false);
     if (!demo) api.get('/api/future-self/avatar').then(r => {
       if (active) setAvatar(r.data.avatar);
     }).catch(() => { if (active) setStatus('Saved avatar could not load. You can retry by reopening Future Me.'); });
@@ -106,7 +107,7 @@ export default function FutureSelfStudio({ demo, entries, onStep }: { demo: bool
       <div className="persona-banner">
         <span className="eyebrow">YOUR STORY. A NEW PERSPECTIVE.</span>
         <h1>A conversation with<br/><em>who you could become.</em></h1>
-        <p>Meet a reflective version of you, inspired by the experiences you choose to share. Explore your patterns, see a symbolic self, and choose what comes next.</p>
+        <p>Meet a reflective version of you, inspired by your included diary entries and saved life goals. Explore your patterns, see a symbolic self, and choose what comes next.</p>
       </div>
       <div className="persona-grid">
         <aside className="card persona-figure">
@@ -147,8 +148,8 @@ export default function FutureSelfStudio({ demo, entries, onStep }: { demo: bool
             </section>
             <section className="card persona-chat">
               <span className="eyebrow purple">A POSSIBLE FUTURE VOICE</span><h2>Talk it through with future you.</h2>
-              <p>Your AI conversation draws on the included entries used to build this portrait. New entries need a rebuild. Each reply rechecks inclusion and deletion controls.</p>
-              <div className="mode-row wrap">{['What should I focus on next?', 'What patterns can I change?', 'What strengths should I keep?'].map(q => <button className="chip" disabled={!!busy} key={q} onClick={() => send(q)}>{q}</button>)}</div>
+              <p>Your AI conversation connects your saved life goals with the included entries used to build this portrait. New entries need a rebuild. Each reply rechecks inclusion and deletion controls.</p>
+              <div className="mode-row wrap">{['What should I work on to reach my goals?', 'What is holding me back?', 'Help me plan one action for this week.'].map(q => <button className="chip" disabled={!!busy} key={q} onClick={() => send(q)}>{q}</button>)}</div>
               <div className="persona-chat-thread" aria-live="polite">{messages.length === 0 && <p>Ask a question about your goals, habits or next step.</p>}{messages.map((m, i) => <div className={'bubble ' + m.role} key={i}>{m.content}</div>)}</div>
               {busy === 'chat' && <p role="status">Reflecting on your story…</p>}
               <form className="composer" onSubmit={e => { e.preventDefault(); send(); }}><textarea aria-label="Message future self" maxLength={4000} placeholder="What would you like to ask your possible future self?" value={draft} onChange={e => setDraft(e.target.value)}/><button className="primary icon-button" type="submit" aria-label="Send to future self" disabled={!draft.trim() || !!busy}><Send size={20}/></button></form>

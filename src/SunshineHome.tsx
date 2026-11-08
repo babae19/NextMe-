@@ -91,7 +91,7 @@ export default function SunshineHome(p: Props) {
           <p className="eyebrow">A LETTER FROM TOMORROW</p>
           <img className="sun-letter-art" src="./resources/birthday-letter.png" alt="" />
           <h2>Your next chapter<br/>is <span>still yours</span><br/>to write.</h2>
-          <p>One birthday. One minute.<br/>A new way to see your next chapter.</p>
+          <p>One birthday. Five minutes.<br/>A new way to see your next chapter.</p>
           <button className="text-button" onClick={p.onFuture}>Explore the birthday experience<ArrowRight size={17}/></button>
           <small>A possibility, never a prediction.</small>
         </section>

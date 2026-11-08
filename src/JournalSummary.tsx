@@ -24,7 +24,7 @@ function bounds(period: Period, anchor: string) {
   return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
 }
 export default function JournalSummary({ demo, entries, timezone }: { demo: boolean; entries: Entry[]; timezone: string }) {
-  const [period, setPeriod] = useState<Period>('weekly');
+  const [period, setPeriod] = useState<Period>('monthly');
   const [anchor, setAnchor] = useState(journalDay(new Date().toISOString(), timezone));
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
@@ -63,7 +63,7 @@ export default function JournalSummary({ demo, entries, timezone }: { demo: bool
         const moods: Record<string, number> = {};
         source.forEach(e => { moods[e.mood] = (moods[e.mood] || 0) + 1; });
         setResult({
-          text: 'Sample ' + (period === 'weekly' ? 'weekly' : 'monthly') + ' summary\n\nHighlights\nThis sample demonstrates how key moments from your journal would be brought together. Your personal summary will refer to your included entries and their dates.\n\nFeelings and patterns\nMood counts above describe the feelings selected for these entries. They are not a mental-health score.\n\nWhat needs attention\nA real summary will distinguish reported challenges from possibilities, and acknowledge limited information.\n\nYour next small step\nChoose one helpful habit to repeat and one manageable action for the coming days.',
+          text: 'Sample ' + (period === 'weekly' ? 'weekly' : 'monthly') + ' summary\n\nHighlights\nThis sample demonstrates how key moments from your journal would be brought together. Your personal summary will refer to your included entries and their dates.\n\nFeelings and patterns\nMood counts above describe the feelings selected for these entries. They are not a mental-health score.\n\nWhat needs attention\nA real summary will distinguish reported challenges from possibilities, and acknowledge limited information.\n\nGoal progress\nIn your own account, this section connects dated diary evidence with your saved life goals.\n\nRecommendations for next month\nA real plan suggests three manageable actions, a likely obstacle and a workaround. This is sample guidance, not personalised advice.\n\nYour first step this week\nChoose one action and a date to review how it went.',
           count: source.length, start: range.start, end: range.end, moods, shortened: false, generated: new Date().toISOString(),
         });
       } else {
@@ -92,15 +92,15 @@ export default function JournalSummary({ demo, entries, timezone }: { demo: bool
   return (
     <section className="card" style={{ marginTop: 20, marginBottom: 22 }}>
       <div className="section-top"><span className="eyebrow purple">YOUR JOURNAL, IN PERSPECTIVE</span><Sparkles size={18}/></div>
-      <h2 style={{ marginTop: 16 }}>Your week. Your month. Your story.</h2>
-      <p>Bring together the moments you have recorded, notice patterns, and choose a small next step.</p>
+      <h2 style={{ marginTop: 16 }}>Your story. Your goals. Your next steps.</h2>
+      <p>Connect your diary with your saved life goals. Monthly advice includes recommendations, practical actions and a progress check for the coming month.</p>
       <div className="mode-row wrap" style={{ alignItems: 'center', gap: 12 }}>
         <button className={period === 'weekly' ? 'chip selected' : 'chip'} aria-pressed={period === 'weekly'} disabled={busy} onClick={() => setPeriod('weekly')}>Weekly summary</button>
-        <button className={period === 'monthly' ? 'chip selected' : 'chip'} aria-pressed={period === 'monthly'} disabled={busy} onClick={() => setPeriod('monthly')}>Monthly summary</button>
+        <button className={period === 'monthly' ? 'chip selected' : 'chip'} aria-pressed={period === 'monthly'} disabled={busy} onClick={() => setPeriod('monthly')}>Monthly advice & plan</button>
         <label className="field-label" style={{ margin: 0 }}>Date within the period
           <input aria-label="Summary reference date" type="date" value={anchor} disabled={busy} style={{ marginTop: 5 }} onChange={e => setAnchor(e.target.value)}/>
         </label>
-        <button className="primary" disabled={busy} onClick={generate}>{busy ? 'Preparing…' : 'Generate summary'}<Sparkles size={15}/></button>
+        <button className="primary" disabled={busy} onClick={generate}>{busy ? 'Preparing…' : period === 'monthly' ? 'Create my monthly plan' : 'Generate summary'}<Sparkles size={15}/></button>
       </div>
       {range && <p>{range.start} – {range.end} · {timezone}{period === 'weekly' ? ' · Monday–Sunday' : ' · Calendar month'}</p>}
       <small className="muted">Only included entries are sent to AI when you generate a summary. Summaries are created on request; reminders do not automatically generate or send journal content.</small>
@@ -109,7 +109,7 @@ export default function JournalSummary({ demo, entries, timezone }: { demo: bool
       {result && (
         <div aria-live="polite">
           <div className="section-top" style={{ marginTop: 20 }}>
-            <h3>{demo ? 'Sample ' : ''}{period === 'weekly' ? 'Weekly' : 'Monthly'} journal summary</h3>
+            <h3>{demo ? 'Sample ' : ''}{period === 'weekly' ? 'Weekly' : 'Monthly'} journal summary & advice</h3>
             <span className="tag">{result.count} included {result.count === 1 ? 'entry' : 'entries'}</span>
           </div>
           <div className="mode-row wrap" style={{ marginTop: 10 }}>

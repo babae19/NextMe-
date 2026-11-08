@@ -31,7 +31,7 @@ Copy `.env.example` to `.env` and load it with your hosting provider or run `nod
 | AI_MODEL | Chat model; defaults to gpt-4o-mini |
 | AI_IMAGE_MODEL | Image model; defaults to gpt-image-1; provider must return base64 images |
 
-Without an AI key, account and journal features work; AI routes return an unavailable message. Never put server keys in frontend VITE variables. Avatar results remain subject to the existing size limit and may be rejected if too large.
+Without an AI key, account and journal features work; AI routes return an unavailable message. Never put server keys in frontend VITE variables. Generated avatars up to 8 MB of encoded data can be saved; larger results return a retry message.
 
 ## Deploy anywhere
 
@@ -64,3 +64,11 @@ Tests exercise real HTTP account creation/login/logout, authenticated journal pe
 The Today screen now includes Reflect, Unwind and Celebrate prompts, a one-minute pause with pause/reset controls, and a “Make it mine” panel. Users can choose gentle, playful or direct language, sunshine/ocean/rose colours and quiet movement. Preferences are stored in this browser, are shared by accounts using that browser, and do not sync across devices. Tone is passed to the live chat endpoint; sample responses remain labelled as samples. Low or difficult moods receive a neutral invitation rather than a humour prompt. Prompt cards preserve an existing draft and never send automatically.
 
 These features are a design-thinking prototype based on the needs of starting easily, choosing the right support and keeping control. They have not yet been validated through user interviews or usability sessions. Next validation should cover first-time journaling, low-mood check-ins, accessibility and shared-device preferences.
+
+## Diary-based future self and life goals
+
+Future Me has a private life-goal planner with title, reason, optional target date, next action and active/paused/completed status. Up to ten goals are saved per account. The persona, everyday future-self chat and journal-inspired avatar use current goals and selected included diaries. Appearance is chosen by the user, never inferred from diary text. Rebuild the persona after changing goals; each chat request rechecks inclusion and reads current goals.
+
+The annual birthday meeting unlocks on the saved birthday in the profile time zone (29 February uses 28 February in non-leap years). It is a **five-minute interactive meeting**, with a personalised opening, text chat, optional browser narration and the saved symbolic avatar. The server starts its 300-second clock after successful generation; reload and narration pause do not extend it. The user can resume an active meeting or use everyday chat after it ends. The annual limit is enforced on the backend. No live video calling is implied.
+
+Journal opens on Monthly advice & plan. Choose a month and create a personalised report with dated diary evidence, goal progress, next-month recommendations, obstacles, practical next actions and a measurable review. Reports are generated on request, not automatically sent. The latest 250 included entries in the selected month are used; partial coverage and shortened excerpts are disclosed. Birthday meetings use up to 2,000 included entries across history. AI/API configuration and independent deployment are still required for live generation. Automated tests use a stub AI response to verify source selection and access rules without transmitting journals to a provider.
