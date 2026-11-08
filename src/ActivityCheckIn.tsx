@@ -81,7 +81,7 @@ export default function ActivityCheckIn({ demo, onSaved }: Props) {
       'RRULE:FREQ=' + (cadence === 'weekly' ? 'WEEKLY;BYDAY=SU' : 'MONTHLY;BYMONTHDAY=1'),
       'SUMMARY:NextMe personal check-in',
       'DESCRIPTION:Reflect on your activities and choose your next small step.',
-      'URL:https://nextme-stgh67.v2.appdeploy.ai/',
+      'URL:' + window.location.origin + '/',
       'BEGIN:VALARM', 'TRIGGER:-PT10M', 'ACTION:DISPLAY', 'DESCRIPTION:Time for a personal check-in', 'END:VALARM',
       'END:VEVENT', 'END:VCALENDAR',
     ].join('\r\n');

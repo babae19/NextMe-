@@ -5,6 +5,7 @@ import JournalSummary, { journalDay } from './JournalSummary';
 import JournalTasks from './JournalTasks';
 import FutureSelfStudio from './FutureSelfStudio';
 import LifeGoals from './LifeGoals';
+import ConnectedServices from './ConnectedServices';
 import BirthdayChat from './BirthdayChat';
 import { MoodLabel } from './MoodLabel';
 import SunshineHome from './SunshineHome';
@@ -822,6 +823,7 @@ export default function App() {
                   </small>
                 </section>
               </div>
+              <ConnectedServices demo={demo} />
               <div className="info-note">
                 <CircleHelp size={18} />
                 <p>
@@ -933,6 +935,7 @@ export default function App() {
                   </small>
                 </section>
               </div>
+              <ConnectedServices demo={demo} />
               <div className="info-note">
                 <CircleHelp size={18} />
                 <p>

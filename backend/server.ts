@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
 import { database, json, error } from './runtime.ts';
 import { handler } from './index.ts';
+import { startReminderScheduler } from './push.ts';
 const scrypt=promisify(scryptCallback);
 database.exec('CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,salt TEXT NOT NULL); CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT NOT NULL,expires INTEGER NOT NULL);');
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
@@ -19,7 +20,7 @@ export const server=createServer(async(req,res)=>{
   const path=resolve(root,'.'+decodeURIComponent(url.pathname));if(path!==root&&!path.startsWith(root+sep))return send(error('Not found',404));
   let data:Buffer;let file=path;
   try{data=await readFile(file);}catch{if(extname(path))return send(error('Not found',404));file=resolve(root,'index.html');data=await readFile(file);}
-  const types:Record<string,string>={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.ico':'image/x-icon'};
+  const types:Record<string,string>={'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.ico':'image/x-icon','.webmanifest':'application/manifest+json'};
   res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:data);return;
  }
  if(req.method!=='GET'&&req.method!=='HEAD'){
@@ -58,4 +59,4 @@ export const server=createServer(async(req,res)=>{
  }catch(err){console.error('Request failed:',err instanceof Error?err.message:'Unknown error');send(error('The request could not be completed.',500));}
 });
 server.requestTimeout=150000;
-if(process.env.NODE_ENV!=='test')server.listen(Number(process.env.PORT||3000),'0.0.0.0',()=>console.log('NextMe server ready'));
+if(process.env.NODE_ENV!=='test'){ const stopReminders=startReminderScheduler();server.on('close',stopReminders);server.listen(Number(process.env.PORT||3000),'0.0.0.0',()=>console.log('NextMe server ready'));}
