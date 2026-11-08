@@ -6,6 +6,7 @@ import { resolve, extname, sep } from 'node:path';
 import { database, json, error } from './runtime.ts';
 import { handler } from './index.ts';
 import { startReminderScheduler } from './push.ts';
+import { appOrigin } from './config.ts';
 const scrypt=promisify(scryptCallback);
 database.exec('CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,salt TEXT NOT NULL); CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT NOT NULL,expires INTEGER NOT NULL);');
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
@@ -24,7 +25,7 @@ export const server=createServer(async(req,res)=>{
   res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream','X-Content-Type-Options':'nosniff'});res.end(req.method==='HEAD'?undefined:data);return;
  }
  if(req.method!=='GET'&&req.method!=='HEAD'){
-  const origin=req.headers.origin;const expected=process.env.APP_ORIGIN;
+  const origin=req.headers.origin;const expected=appOrigin();
   if(origin && origin!==(expected||'http://'+req.headers.host))return send(error('Origin rejected',403));
   if(req.headers['content-type']?.split(';')[0]!=='application/json')return send(error('JSON required',415));
  }
@@ -33,7 +34,7 @@ export const server=createServer(async(req,res)=>{
  const token=req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('nextme_session='))?.slice(15)||'';
  const session=database.prepare('SELECT user_id FROM sessions WHERE token=? AND expires>?').get(digest(token),Date.now());
  const userId=session?String(session.user_id):undefined;
- if(url.pathname==='/api/health')return send(json({ok:true}));
+ if(url.pathname==='/api/health'){database.prepare('SELECT 1').get();return send(json({ok:true}));}
  if(url.pathname==='/api/auth/me'&&req.method==='GET'){
   const user=userId?database.prepare('SELECT id,email FROM users WHERE id=?').get(userId):null;return send(json({user:user?{userId:user.id,email:user.email,name:String(user.email).split('@')[0]}:null}));
  }
@@ -59,4 +60,16 @@ export const server=createServer(async(req,res)=>{
  }catch(err){console.error('Request failed:',err instanceof Error?err.message:'Unknown error');send(error('The request could not be completed.',500));}
 });
 server.requestTimeout=150000;
-if(process.env.NODE_ENV!=='test'){ const stopReminders=startReminderScheduler();server.on('close',stopReminders);server.listen(Number(process.env.PORT||3000),'0.0.0.0',()=>console.log('NextMe server ready'));}
+if(process.env.NODE_ENV!=='test'){
+ appOrigin(); // Fail startup on invalid production URL configuration.
+ const stopReminders=startReminderScheduler();
+ server.on('close',stopReminders);
+ server.listen(Number(process.env.PORT||3000),'0.0.0.0',()=>console.log('NextMe server ready'));
+ let stopping=false;
+ const shutdown=()=>{
+  if(stopping)return;stopping=true;stopReminders();
+  const timeout=setTimeout(()=>{server.closeAllConnections();process.exit(0);},25000);timeout.unref();
+  server.close(()=>{clearTimeout(timeout);database.close();process.exit(0);});
+ };
+ process.on('SIGTERM',shutdown);process.on('SIGINT',shutdown);
+}

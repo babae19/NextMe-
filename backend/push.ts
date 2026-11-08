@@ -1,4 +1,5 @@
 import * as webpush from 'web-push';
+import { appOrigin } from './config.ts';
 import { database } from './database.ts';
 import { createHash } from 'node:crypto';
 database.exec(`CREATE TABLE IF NOT EXISTS push_config (id INTEGER PRIMARY KEY, public_key TEXT NOT NULL, private_key TEXT NOT NULL);
@@ -48,7 +49,7 @@ export async function deliverDueReminders(now=Date.now(),send=webpush.sendNotifi
     try {const subscription=JSON.parse(String(device.subscription));if(!validPushSubscription(subscription)){database.prepare('DELETE FROM push_devices WHERE id=?').run(device.id);continue;}
      // Content is generic, including for monthly advice; journals are never placed in push payloads.
      const body=row.topic==='nextme-monthly'?'Your monthly reflection and goal plan are ready to create. Open NextMe when you have a moment.':row.topic==='nextme-weekly'?'Take a moment to reflect on your week.':'One small reflection counts. Your journal is here when you are ready.';
-     await send(subscription,JSON.stringify({title:'A moment for you · NextMe',body,url:'/',tag:String(row.topic)}),{TTL:3600,timeout:10000,urgency:'normal',vapidDetails:{subject:process.env.VAPID_SUBJECT||(process.env.APP_ORIGIN?.startsWith('https:')?process.env.APP_ORIGIN:'https://localhost'),publicKey:publicPushKey,privateKey:privatePushKey}});
+     await send(subscription,JSON.stringify({title:'A moment for you · NextMe',body,url:'/',tag:String(row.topic)}),{TTL:3600,timeout:10000,urgency:'normal',vapidDetails:{subject:process.env.VAPID_SUBJECT||(appOrigin().startsWith('https:')?appOrigin():'https://localhost'),publicKey:publicPushKey,privateKey:privatePushKey}});
     }catch(e:any){if(e?.statusCode===404||e?.statusCode===410)database.prepare('DELETE FROM push_devices WHERE id=?').run(device.id);else failed=true;}
    }
    // User may opt out while a request is in flight. UPDATE cannot recreate an opted-out schedule.
