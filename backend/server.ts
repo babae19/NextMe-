@@ -6,7 +6,7 @@ import { resolve, extname, sep } from 'node:path';
 import { database, json, error } from './runtime.ts';
 import { handler } from './index.ts';
 import { startReminderScheduler } from './push.ts';
-import { appOrigin } from './config.ts';
+import { appOrigin, demoOnly } from './config.ts';
 const scrypt=promisify(scryptCallback);
 database.exec('CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,salt TEXT NOT NULL); CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT NOT NULL,expires INTEGER NOT NULL);');
 const digest=(s:string)=>createHash('sha256').update(s).digest('hex');
@@ -34,7 +34,11 @@ export const server=createServer(async(req,res)=>{
  const token=req.headers.cookie?.split(';').map(s=>s.trim()).find(s=>s.startsWith('nextme_session='))?.slice(15)||'';
  const session=database.prepare('SELECT user_id FROM sessions WHERE token=? AND expires>?').get(digest(token),Date.now());
  const userId=session?String(session.user_id):undefined;
- if(url.pathname==='/api/health'){database.prepare('SELECT 1').get();return send(json({ok:true}));}
+ if(url.pathname==='/api/health'){database.prepare('SELECT 1').get();return send(json({ok:true,demoOnly:demoOnly()}));}
+ if(demoOnly()){
+  if(url.pathname==='/api/auth/me'&&req.method==='GET')return send(json({user:null,demoOnly:true}));
+  return send(error('Private accounts and cloud saving are not enabled on this free preview. Try the sample; persistent storage must be connected first.',503));
+ }
  if(url.pathname==='/api/auth/me'&&req.method==='GET'){
   const user=userId?database.prepare('SELECT id,email FROM users WHERE id=?').get(userId):null;return send(json({user:user?{userId:user.id,email:user.email,name:String(user.email).split('@')[0]}:null}));
  }
@@ -62,7 +66,7 @@ export const server=createServer(async(req,res)=>{
 server.requestTimeout=150000;
 if(process.env.NODE_ENV!=='test'){
  appOrigin(); // Fail startup on invalid production URL configuration.
- const stopReminders=startReminderScheduler();
+ const stopReminders=demoOnly()?()=>{}:startReminderScheduler();
  server.on('close',stopReminders);
  server.listen(Number(process.env.PORT||3000),'0.0.0.0',()=>console.log('NextMe server ready'));
  let stopping=false;

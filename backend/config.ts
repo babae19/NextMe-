@@ -6,3 +6,5 @@ export function appOrigin() {
  if(url.username||url.password||!['http:','https:'].includes(url.protocol)||process.env.NODE_ENV==='production'&&url.protocol!=='https:')throw Error('Configure a valid HTTPS APP_ORIGIN.');
  return url.origin;
 }
+
+export const demoOnly = () => process.env.DEMO_ONLY === 'true';

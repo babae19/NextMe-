@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { api, auth } from './client';
+import { api, auth, runtime } from './client';
 import ActivityCheckIn from './ActivityCheckIn';
 import JournalSummary, { journalDay } from './JournalSummary';
 import JournalTasks from './JournalTasks';
@@ -93,6 +93,7 @@ export default function App() {
     document.documentElement.dataset.quiet = String(!preferences.motion);
     try { localStorage.setItem('nextme-preferences', JSON.stringify(preferences)); } catch { /* Preferences still work for this visit. */ }
   }, [preferences]);
+  const [freePreview, setFreePreview] = useState(false);
   const [tab, setTab] = useState('Today');
   const [demo, setDemo] = useState(true);
   const [signed, setSigned] = useState(false);
@@ -173,6 +174,7 @@ export default function App() {
   async function loadAccount() {
     accountEpoch.current += 1;
     const user = await auth.getUser();
+    setFreePreview(runtime.demoOnly);
     if (!user) return;
     setSigned(true);
     setDemo(false);
@@ -538,11 +540,10 @@ export default function App() {
         {demo && (
           <div className="demo-strip">
             <span>
-              <Sparkles size={14} /> You’re exploring a sample. Your own story
-              starts when you sign in.
+              <Sparkles size={14} /> {freePreview ? 'Free preview · sample data only. Private accounts and cloud saving await persistent storage.' : 'You’re exploring a sample. Your own story starts when you sign in.'}
             </span>
-            <button onClick={signIn}>
-              Create my space <ArrowRight size={14} />
+            <button onClick={signIn} disabled={freePreview}>
+              {freePreview ? "Sample preview" : "Create my space"} <ArrowRight size={14} />
             </button>
           </div>
         )}

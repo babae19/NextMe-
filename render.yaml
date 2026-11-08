@@ -1,5 +1,4 @@
-# Deployment target: NextMe / Production in Abdulai's workspace.
-# Review the paid compute and persistent disk before applying.
+# Free sample deployment. Private accounts stay disabled until durable storage is connected.
 projects:
 - name: NextMe
   environments:
@@ -9,25 +8,19 @@ projects:
       name: NextMe
       runtime: node
       repo: https://github.com/babae19/NextMe-
-      branch: main
-      plan: 0.5c-512mb
+      branch: render-free
+      plan: free
       numInstances: 1
       autoDeployTrigger: checksPass
       buildCommand: npm ci --include=dev && npm run typecheck && npm run build
       startCommand: npm start
       healthCheckPath: /api/health
-      disk:
-        name: nextme-data
-        mountPath: /var/data/nextme
-        sizeGB: 1
       envVars:
       - key: NODE_VERSION
         value: '24'
       - key: NODE_ENV
         value: production
       - key: DATABASE_PATH
-        value: /var/data/nextme/nextme.sqlite
-      - key: AI_PROVIDER
-        value: openai
-      - key: AI_API_KEY
-        sync: false
+        value: /tmp/nextme-preview.sqlite
+      - key: DEMO_ONLY
+        value: 'true'
