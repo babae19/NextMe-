@@ -1,0 +1,38 @@
+name: Android preview APK
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'android/**'
+      - 'src/**'
+      - 'public/**'
+      - 'scripts/prepare-android.mjs'
+      - 'package*.json'
+      - 'vite.config.ts'
+      - 'index.html'
+      - '.github/workflows/android.yml'
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - run: npm ci
+      - run: npm run android:prepare
+      - run: chmod +x android/gradlew && cd android && ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NextMe-Android-preview
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

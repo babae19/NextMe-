@@ -95,3 +95,7 @@ The Future Me page includes learning resources and an authenticated service-stat
 SQLite now stores encrypted-push subscription credentials and a private VAPID key. Include these in protected backups and never rotate the key casually: existing devices would need re-registration. Run only one scheduler instance for this SQLite deployment. On transient push failures the server retries twice at five-minute intervals, then moves to the next scheduled occurrence. Push services are allowlisted to reduce SSRF risk; unsupported browser push hosts require explicit review before addition.
 
 Provider references: https://github.com/public-apis/public-apis, https://openrouter.ai/docs/quickstart, https://openrouter.ai/docs/guides/overview/multimodal/image-generation, https://openlibrary.org/developers/api, https://openlibrary.org/dev/docs/api/search, https://github.com/web-push-libs/web-push.
+
+## Android mobile preview
+
+An Android 8.0+ client is under `android/`. Run `npm run android:prepare`, then `cd android && ./gradlew assembleDebug`. The APK includes a labelled offline sample and lets the user connect their deployed independent NextMe HTTPS website. Account storage and AI remain on that server. Native Android push and native file exports are not implemented; the app provides an Open in browser option for reminders and downloads. See `android/README.md` for build, installation, signing and capability limits.

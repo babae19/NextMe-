@@ -10,7 +10,8 @@
     "test": "node --experimental-strip-types --test scripts/*.test.mjs",
     "start": "node --env-file-if-exists=.env --experimental-strip-types backend/server.ts",
     "dev:server": "node --env-file-if-exists=.env --experimental-strip-types --watch backend/server.ts",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.server.json",
+    "android:prepare": "node scripts/prepare-android.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.469.0",

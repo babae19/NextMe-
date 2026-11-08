@@ -7,7 +7,7 @@ export const auth={
  isSignedIn:()=>true,
  async getUser(){return (await api.get('/api/auth/me')).data.user;},
  async signOut(){try { await notifications.unregister(); } finally { await api.post('/api/auth/logout'); }},
- async signIn(){return new Promise<void>((resolve,reject)=>{
+ async signIn(){if(window.location.hostname==='appassets.androidplatform.net')throw Error('Tap Connect in the Android toolbar to use your deployed NextMe website.');return new Promise<void>((resolve,reject)=>{
  const dialog=document.createElement('dialog');dialog.className='account-dialog';
  dialog.innerHTML=`<form><h2>Your NextMe account</h2><p>Sign in or create a private journal account.</p><label>Email<input name="email" type="email" required autocomplete="email"></label><label>Password<input name="password" type="password" required minlength="12" autocomplete="current-password"></label><p role="alert" class="account-error"></p><button type="submit" value="login">Sign in</button><button type="submit" value="register">Create account</button><button type="button" class="cancel">Cancel</button></form>`;
  const close=()=>{dialog.close();dialog.remove();};
