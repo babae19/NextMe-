@@ -43,7 +43,7 @@ export default function SunshineHome(p: Props) {
       <section className="sun-hero">
         <div className="sun-intro">
           <p className="eyebrow">{today.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}</p>
-          <h1>A little check-in.<br/><span className="coral-word">A brighter</span> <span className="blue-word">perspective.</span></h1>
+          <h1>Make a little<br/> <span className="coral-word">time for you.</span></h1>
           <p className="sun-subtitle">However life feels today, there’s room for it here.<br/>Take a moment to check in, {p.name === 'friend' ? 'or chat about your day' : p.name}.</p>
           <div className="sun-checkin">
             <div className="section-top"><h2>HOW IS LIFE FEELING TODAY?</h2><span className="tag">A moment for you</span></div>
@@ -60,7 +60,8 @@ export default function SunshineHome(p: Props) {
           </div>
         </div>
         <div className="sun-illustration">
-          <p className="sun-handwritten">Same you.<br/>Brighter tomorrows.</p>
+          <span className="sun-sticker" aria-hidden="true"><Sparkles size={19}/> SMALL STEPS CLUB</span>
+          <p className="sun-handwritten">Come as you are.</p>
           <img src="./resources/sunshine-hero.png" alt="A cheerful sunshine character with plants, books and a warm drink" />
         </div>
       </section>

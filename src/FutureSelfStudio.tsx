@@ -104,7 +104,7 @@ export default function FutureSelfStudio({ demo, entries, onStep, goalRevision }
   const lastReply = [...messages].reverse().find(m => m.role === 'assistant')?.content;
   return (
     <section className="future-studio">
-      <div className="persona-banner">
+      <div className="persona-banner chapter-banner future-banner">
         <span className="eyebrow">YOUR STORY. A NEW PERSPECTIVE.</span>
         <h1>A conversation with<br/><em>who you could become.</em></h1>
         <p>Meet a reflective version of you, inspired by your included diary entries and saved life goals. Explore your patterns, see a symbolic self, and choose what comes next.</p>
