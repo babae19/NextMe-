@@ -472,7 +472,7 @@ export default function App() {
           nextme<span className="brand-dot">.</span>
         </a>
         <div className="workspace-label">YOUR PERSONAL SPACE</div>
-        <nav>
+        <nav aria-label="NextMe workspace">
           {[
             ['Today', Home],
             ['Journal', BookOpen],
@@ -483,6 +483,7 @@ export default function App() {
             return (
               <button
                 key={String(label)}
+                aria-current={tab === label ? 'page' : undefined}
                 className={tab === label ? 'nav-item active' : 'nav-item'}
                 onClick={() => {
                   setTab(String(label));
@@ -547,7 +548,7 @@ export default function App() {
             </button>
           </div>
         )}
-        <div className="content">
+        <div className="content" data-page={tab}>
           {error && (
             <div role="alert" className="alert error">
               {error}
@@ -600,20 +601,22 @@ export default function App() {
           )}
           {tab === 'Journal' && (
             <>
-              <p className="eyebrow">YOUR STORY, IN YOUR WORDS</p>
-              <div className="section-heading">
-                <div>
-                  <h1>
-                    Pages of <em>your life.</em>
-                  </h1>
-                  <p className="subtitle">
-                    Keep the moments. Notice what changes.
-                  </p>
+              <div className="chapter-banner journal-banner">
+                <p className="eyebrow">YOUR STORY, IN YOUR WORDS</p>
+                <div className="section-heading">
+                  <div>
+                    <h1>
+                      Pages of <em>your life.</em>
+                    </h1>
+                    <p className="subtitle">
+                      Keep the moments. Notice what changes.
+                    </p>
+                  </div>
+                  <button className="primary" onClick={() => setChat(true)}>
+                    <Plus size={17} />
+                    New entry
+                  </button>
                 </div>
-                <button className="primary" onClick={() => setChat(true)}>
-                  <Plus size={17} />
-                  New entry
-                </button>
               </div>
               <JournalSummary
                 demo={demo}
@@ -836,13 +839,15 @@ export default function App() {
           )}
           {tab === 'Profile' && (
             <>
-              <p className="eyebrow">YOU’RE IN CONTROL</p>
-              <h1>
-                Your space. <em>Your choices.</em>
-              </h1>
-              <p className="subtitle">
-                Choose what you share and what you keep.
-              </p>
+              <div className="chapter-banner profile-banner">
+                <p className="eyebrow">YOU’RE IN CONTROL</p>
+                <h1>
+                  Your space. <em>Your choices.</em>
+                </h1>
+                <p className="subtitle">
+                  Choose what you share and what you keep.
+                </p>
+              </div>
               <button className="secondary" style={{marginBottom: 20}} onClick={() => setTab('Future Me')}><Sparkles size={16}/>Manage my life goals</button>
               <ActivityCheckIn
                 key={demo ? 'sample-checkin' : profile?.name || 'personal-checkin'}
