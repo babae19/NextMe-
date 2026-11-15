@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, CalendarDays, Cloud, Frown, Heart, Laugh, Meh, MessageCircle, Smile, Sparkles, Sun } from 'lucide-react';
+import { ArrowRight, Frown, Laugh, Meh, Smile } from 'lucide-react';
 
 import { moodEmoji } from './MoodLabel';
 
@@ -26,82 +26,12 @@ const choices = [
   { name: 'Good', Icon: Smile, color: 'green' },
   { name: 'Great', Icon: Laugh, color: 'blue' },
 ];
-function dayKey(date: Date) {
-  return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
-}
 export default function SunshineHome(p: Props) {
-  const today = new Date();
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - (today.getDay() + 6) % 7);
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const day = new Date(monday);
-    day.setDate(monday.getDate() + index);
-    return day;
-  });
-  return (
-    <>
-      <section className="sun-hero">
-        <div className="sun-intro">
-          <p className="eyebrow">{today.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}</p>
-          <h1>Make a little<br/> <span className="coral-word">time for you.</span></h1>
-          <p className="sun-subtitle">However life feels today, there’s room for it here.<br/>Take a moment to check in, {p.name === 'friend' ? 'or chat about your day' : p.name}.</p>
-          <div className="sun-checkin">
-            <div className="section-top"><h2>HOW IS LIFE FEELING TODAY?</h2><span className="tag">A moment for you</span></div>
-            <div className="sun-moods">
-              {choices.map(({ name, Icon, color }) => (
-                <button key={name} aria-label={name} aria-pressed={p.mood === name} className={'sun-mood ' + color + (p.mood === name ? ' is-selected' : '')} onClick={() => p.onMood(name)}>
-                  <span className="sun-face"><Icon size={56} strokeWidth={1.65}/></span>
-                  <span>{name}</span>
-                </button>
-              ))}
-            </div>
-            <button className="primary wide" onClick={p.onChat}><MessageCircle size={22}/>Let’s talk about it<ArrowRight size={22}/></button>
-            <button className="text-button sun-guide" onClick={p.onGuide}><Heart size={16}/>Open my daily wellbeing guide<ArrowRight size={15}/></button>
-          </div>
-        </div>
-        <div className="sun-illustration">
-          <span className="sun-sticker" aria-hidden="true"><Sparkles size={19}/> SMALL STEPS CLUB</span>
-          <p className="sun-handwritten">Come as you are.</p>
-          <img src="./resources/sunshine-hero.png" alt="A cheerful sunshine character with plants, books and a warm drink" />
-        </div>
-      </section>
-      <div className="sun-support-grid">
-        <section className="sun-week">
-          <div className="section-top"><p className="eyebrow">YOUR WEEKLY JOURNAL {p.demo ? '· SAMPLE' : ''}</p><button className="text-button" onClick={p.onJournal}>Read my weekly summary<ArrowRight size={17}/></button></div>
-          <h2>A look back at your week.</h2>
-          <p>Moments, thoughts and feelings—all part of your story.</p>
-          <div className="sun-week-days">
-            {days.map(day => {
-              const entry = p.entries.find(e => dayKey(new Date(e.created)) === dayKey(day));
-              const isToday = dayKey(day) === dayKey(today);
-              const future = day > today;
-              const Icon = entry ? (entry.mood === 'Difficult' || entry.mood === 'Low' ? Cloud : entry.mood === 'Great' ? Heart : Sun) : isToday ? Sun : CalendarDays;
-              return (
-                <button key={dayKey(day)} className={'sun-day' + (isToday ? ' today' : '') + (entry ? ' has-entry' : '')} onClick={() => entry ? p.onEntry(entry) : p.onChat()} aria-label={day.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) + (entry ? ': open entry' : ': write a reflection')}>
-                  <span className="sun-day-date">{day.toLocaleDateString(undefined, { weekday: 'short' })}<br/>{day.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
-                  <Icon size={29} strokeWidth={1.8}/>
-                  <span className="sun-day-copy">{entry ? (moodEmoji[entry.mood] || '📝') + ' ' + entry.mood + ' moment' : isToday ? 'Today. Let’s check in.' : future ? 'A new day ahead.' : 'A page to write.'}</span>
-                </button>
-              );
-            })}
-          </div>
-          <button className="text-button" disabled={p.busy} onClick={p.onReflection} style={{ marginTop: 12 }}>Read my reflection<ArrowRight size={15}/></button>
-          <small className="muted">{p.demo ? 'Sample journal entries. ' : ''}This view shows loaded journal entries. Open Journal for more pages and monthly summaries.</small>
-        </section>
-        <section className="sun-birthday">
-          <p className="eyebrow">A LETTER FROM TOMORROW</p>
-          <img className="sun-letter-art" src="./resources/birthday-letter.png" alt="" />
-          <h2>Your next chapter<br/>is <span>still yours</span><br/>to write.</h2>
-          <p>One birthday. Five minutes.<br/>A new way to see your next chapter.</p>
-          <button className="text-button" onClick={p.onFuture}>Explore the birthday experience<ArrowRight size={17}/></button>
-          <small>A possibility, never a prediction.</small>
-        </section>
-      </div>
-      <div className="sun-bottom-actions">
-        <button onClick={p.onReminders}><CalendarDays size={23}/><span>Your check-in rhythm<small>Weekly or monthly. Make it yours.</small></span><ArrowRight size={18}/></button>
-        <button onClick={p.onJournal}><BookOpen size={23}/><span>Your journal, in perspective<small>Weekly & monthly summaries</small></span><ArrowRight size={18}/></button>
-        <button onClick={p.onFuture}><Sparkles size={23}/><span>{p.step || 'One small step forward'}<small>{p.step ? 'Your chosen next step' : 'Choose something kind for yourself.'}</small></span><ArrowRight size={18}/></button>
-      </div>
-    </>
-  );
+ const today = new Date();
+ return <div className="journal-home">
+  <section className="journal-welcome"><div><p className="eyebrow">{today.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})} · YOUR DAILY JOURNAL</p><h1>Life happens.<br/><em>Let it out here.</em> 🌱</h1><p>A little space for your everyday stories, big feelings, small wins, and fresh starts. Welcome, {p.name}.</p><button className="primary" onClick={p.onChat}>✍️ Write today’s page <ArrowRight size={18}/></button><span className="journal-private">🔒 Your words. Your space. Your pace.</span></div><div className="journal-paper" aria-hidden="true"><span>dear journal,</span><p>Today wasn’t perfect.<br/>But there were little<br/>things worth keeping.</p><b>and that’s enough. ☀️</b><i>♡</i></div></section>
+  <section className="journal-mood card"><div><h2>How are you arriving today?</h2><p>Every feeling is welcome.</p></div><div className="journal-mood-options">{choices.map(({name})=><button key={name} aria-pressed={p.mood===name} onClick={()=>p.onMood(name)} className={p.mood===name?'selected':''}><span>{moodEmoji[name]}</span>{name}</button>)}</div></section>
+  <div className="journal-two"><section className="card journal-talk"><span className="journal-kicker">💬 A JOURNAL THAT LISTENS</span><h2>You don’t have to<br/>figure it all out alone.</h2><p>Share what happened. Your AI journal companion can help you untangle a thought, celebrate a win, or find a gentle way forward.</p><button className="secondary" onClick={p.onGuide}>Talk it through <ArrowRight size={16}/></button><small>AI uses your messages and entries you choose to include.</small></section><section className="card journal-birthday"><span className="journal-kicker">🎂 A LITTLE SOMETHING FOR FUTURE YOU</span><h2>One birthday.<br/>One meaningful minute.</h2><p>Your journal helps shape a conversation with a possible future self. A warm glimpse of what could be, grounded in the life you’re writing.</p><button className="secondary" onClick={p.onFuture}>My birthday moment <ArrowRight size={16}/></button><small>A possibility, never a prediction.</small></section></div>
+  <section className="journal-recent"><div className="section-heading"><h2>Your recent pages {p.demo?'· sample':''}</h2><button className="text-button" onClick={p.onJournal}>All my entries <ArrowRight size={16}/></button></div>{p.entries.length?<div className="journal-two">{[...p.entries].sort((a,b)=>b.created.localeCompare(a.created)).slice(0,2).map(entry=><button className="card journal-preview" key={entry.id} onClick={()=>p.onEntry(entry)}><span>{moodEmoji[entry.mood]} {new Date(entry.created).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</span><p>{entry.text.slice(0,180)}{entry.text.length>180?'…':''}</p><small>Open this page ↗</small></button>)}</div>:<div className="card"><p>📖 Your first page is waiting. A sentence is enough.</p><button className="text-button" onClick={p.onChat}>Start my journal →</button></div>}</section>
+ </div>;
 }
