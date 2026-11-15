@@ -2,14 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { api, auth, runtime } from './client';
 import ActivityCheckIn from './ActivityCheckIn';
 import JournalSummary, { journalDay } from './JournalSummary';
-import JournalTasks from './JournalTasks';
-import FutureSelfStudio from './FutureSelfStudio';
-import LifeGoals from './LifeGoals';
 import ConnectedServices from './ConnectedServices';
 import BirthdayChat from './BirthdayChat';
 import { MoodLabel } from './MoodLabel';
 import SunshineHome from './SunshineHome';
-import PersonalSpace, { readPreferences } from './PersonalSpace';
+import { readPreferences } from './PersonalSpace';
 import {
   ArrowUpRight,
   ArrowRight,
@@ -50,8 +47,7 @@ type Profile = {
   consent: boolean;
 };
 type Message = { role: string; content: string };
-const sampleText =
-  'I am one possible version of you, five years ahead. I cannot predict your life. This sample is an invitation to reflect on the choices you make today.\n\nSmall, consistent efforts can create room for growth. If you keep making time for what matters, you may find yourself living with more intention.\n\nWhen life gets difficult, pausing and asking for support can help. You do not have to solve every challenge at once or earn the right to rest.\n\nChoose one manageable step this week. Make a little time for something meaningful, or reach out to someone you trust. Your future is still taking shape.';
+const sampleText = 'Happy birthday. I’m one possible future you, not a prediction. In this sample story, a walk and a conversation with a friend created a little breathing room.\n\nYou don’t need to have everything figured out. What is one small thing you would like to carry into your next year?';
 const samples: Entry[] = [
   {
     id: 'sample-1',
@@ -87,7 +83,7 @@ const failText = (e: unknown) => {
   );
 };
 export default function App() {
-  const [preferences, setPreferences] = useState(readPreferences);
+  const [preferences] = useState(readPreferences);
   useEffect(() => {
     document.documentElement.dataset.palette = preferences.palette;
     document.documentElement.dataset.quiet = String(!preferences.motion);
@@ -120,8 +116,8 @@ export default function App() {
   const [historyOrder, setHistoryOrder] = useState('newest');
   const [historyBusy, setHistoryBusy] = useState(false);
   const [historyError, setHistoryError] = useState('');
-  const [taskRefresh, setTaskRefresh] = useState(0);
-  const [sampleReviewed, setSampleReviewed] = useState(false);
+  const [, setTaskRefresh] = useState(0);
+  const [, setSampleReviewed] = useState(false);
   const historyRunning = useRef(false);
   const accountEpoch = useRef(0);
   const [editing, setEditing] = useState<Entry | null>(null);
@@ -132,7 +128,6 @@ export default function App() {
   const [seconds, setSeconds] = useState(0);
   const [meetingExpiresAt, setMeetingExpiresAt] = useState(0);
   const [meetingMessages, setMeetingMessages] = useState<Message[]>([]);
-  const [goalRevision, setGoalRevision] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [done, setDone] = useState(false);
   const [narrate, setNarrate] = useState(false);
@@ -143,13 +138,13 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (!encounter || !meetingExpiresAt || done) return;
-    const tick = () => setSeconds(Math.max(0, Math.min(300, 300 - Math.ceil((meetingExpiresAt - Date.now()) / 1000))));
+    const tick = () => setSeconds(Math.max(0, Math.min(60, 60 - Math.ceil((meetingExpiresAt - Date.now()) / 1000))));
     tick();
     const timer = window.setInterval(tick, 250);
     return () => clearInterval(timer);
   }, [encounter, meetingExpiresAt, done]);
   useEffect(() => {
-    if (seconds === 300 && encounter && !done) {
+    if (seconds === 60 && encounter && !done) {
       setPlaying(false);
       window.speechSynthesis?.cancel();
       if (demo) {
@@ -317,12 +312,9 @@ export default function App() {
   }
   async function saveEntry() {
     const text =
-      messages
-        .filter(m => m.role === 'user')
-        .map(m => m.content)
-        .join('\n\n') || draft.trim();
+      [...messages.filter(m => m.role === 'user').map(m => m.content), draft.trim()].filter(Boolean).join('\n\n');
     if (!text) {
-      setError('Write something before saving your reflection.');
+      setError('Write a little about your day before saving.');
       return;
     }
     if (text.length > 6000) {
@@ -403,7 +395,7 @@ export default function App() {
     setDone(false);
     setSeconds(0);
     try {
-      const meeting = demo ? {text: sampleText, expiresAt: Date.now() + 300000, messages: []} : (await api.post('/api/reveal', {})).data;
+      const meeting = demo ? {text: sampleText, expiresAt: Date.now() + 60000, messages: []} : (await api.post('/api/reveal', {})).data;
       if (meeting.completed) { setCompleted(true); throw new Error('This year’s meeting is complete.'); }
       const text = meeting.text;
       setMeetingExpiresAt(meeting.expiresAt);
@@ -568,7 +560,6 @@ export default function App() {
               </button>
             </div>
           )}
-          {tab === 'Today' && <PersonalSpace mood={mood} preferences={preferences} onPreferences={setPreferences} onStart={(prompt, selectedMode) => { setDraft(current => current.trim() ? current : prompt + '\n\n'); setMode(selectedMode); setChat(true); }} />}
           {tab === 'Today' && (
             <SunshineHome
               mood={mood}
@@ -578,25 +569,13 @@ export default function App() {
               name={nameLabel}
               step={step}
               onChat={() => setChat(true)}
-              onGuide={() => { setMode('Daily wellbeing guide'); setChat(true); }}
+              onGuide={() => { setMode('Help me reflect'); setChat(true); }}
               onJournal={() => setTab('Journal')}
               onReflection={reflect}
               busy={busy}
               onFuture={() => setTab('Future Me')}
               onReminders={() => setTab('Profile')}
               onEntry={entry => { setTab('Journal'); openJournalEntry(entry); }}
-            />
-          )}
-          {tab === 'Today' && (
-            <JournalTasks
-              demo={demo}
-              entries={entries}
-              timezone={profile?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone}
-              refresh={taskRefresh}
-              sampleReviewed={sampleReviewed}
-              completeHistory={!cursor && !historyBusy}
-              onWrite={() => setChat(true)}
-              onHistory={() => setTab('Journal')}
             />
           )}
           {tab === 'Journal' && (
@@ -665,7 +644,7 @@ export default function App() {
                             className="text-button"
                             onClick={() => openJournalEntry(e)}
                           >
-                            Edit entry
+                            Open entry
                           </button>
                           <button
                             className="icon-button danger"
@@ -700,18 +679,10 @@ export default function App() {
           )}
           {tab === 'Future Me' && (
             <>
-              <section className="monthly-plan-link"><div><h3>A plan for your next month</h3><p>Turn your diary and life goals into practical recommendations.</p></div><button className="secondary" onClick={() => setTab('Journal')}>Open monthly advice<ArrowRight size={16}/></button></section>
-              <LifeGoals key={demo ? "sample-goals" : "account-goals"} demo={demo} onSaved={() => setGoalRevision(v => v + 1)} />
-              <FutureSelfStudio
-                goalRevision={goalRevision}
-                demo={demo}
-                entries={entries}
-                onStep={value => { setStep(value); localStorage.setItem('nextme-step', value); }}
-              />
               <div className="annual-encounter-heading">
                 <p className="eyebrow">YOUR BIRTHDAY RITUAL</p>
-                <h2>Your annual five-minute meeting.</h2>
-                <p>The birthday experience stays separate from everyday future-self chat.</p>
+                <h2>Your annual one-minute meeting.</h2>
+                <p>Your everyday words become a gentle glimpse of who you could become. 🎂</p>
               </div>
               <div className="future-page">
                 <section className="future-card reveal-card">
@@ -730,7 +701,7 @@ export default function App() {
                           : 'YOUR ANNUAL ENCOUNTER'}
                   </span>
                   <h2>
-                    Five minutes.
+                    One minute.
                     <br />A different perspective.
                   </h2>
                   <p>
@@ -762,7 +733,7 @@ export default function App() {
                         : completed
                           ? 'See you next birthday'
                           : eligible
-                            ? 'Begin my five minutes'
+                            ? 'Begin my one minute'
                             : 'Opens on your birthday'}
                     {!demo && !eligible ? (
                       <LockKeyhole size={16} />
@@ -770,7 +741,7 @@ export default function App() {
                       <Play size={16} />
                     )}
                   </button>
-                  <small>Five minutes to read and chat. Pause narration whenever you need.</small>
+                  <small>One minute to read and chat. Pause narration whenever you need.</small>
                 </section>
                 <section className="card chapter">
                   <span className="icon-box teal">
@@ -827,7 +798,6 @@ export default function App() {
                   </small>
                 </section>
               </div>
-              <ConnectedServices demo={demo} />
               <div className="info-note">
                 <CircleHelp size={18} />
                 <p>
@@ -848,7 +818,7 @@ export default function App() {
                   Choose what you share and what you keep.
                 </p>
               </div>
-              <button className="secondary" style={{marginBottom: 20}} onClick={() => setTab('Future Me')}><Sparkles size={16}/>Manage my life goals</button>
+              <button className="secondary" style={{marginBottom: 20}} onClick={() => setTab('Future Me')}><Sparkles size={16}/>My birthday moment</button>
               <ActivityCheckIn
                 key={demo ? 'sample-checkin' : profile?.name || 'personal-checkin'}
                 demo={demo}
@@ -922,7 +892,7 @@ export default function App() {
                   <p>
                     Your signed-in entries are stored by this service and
                     restricted to your account. AI processes messages you send
-                    in chat. Only entries you include are used for journal
+                    in chat. Only entries you include are used for AI conversations, journal
                     reflections and your birthday message.
                   </p>
                   <p>
@@ -965,20 +935,22 @@ export default function App() {
             <div className="modal-heading">
               <div>
                 <span className="eyebrow purple">
-                  {demo ? 'SAMPLE CONVERSATION' : 'YOUR DAILY REFLECTION'}
+                  {demo ? 'SAMPLE CONVERSATION' : 'YOUR PRIVATE JOURNAL'}
                 </span>
-                <h2>A little space to talk.</h2>
+                <h2>Your day, your words. ✍️</h2>
               </div>
               <button
                 aria-label="Close chat"
                 className="icon-button"
+                disabled={busy}
                 onClick={() => setChat(false)}
               >
                 <X />
               </button>
             </div>
+            <div className="journal-prompts">{["🌤️ My day", "🎉 A success", "🧩 A challenge", "🌱 A setback"].map(topic => <button className="chip" key={topic} onClick={() => setDraft(current => current + (current ? "\n\n" : "") + topic + "\n")} disabled={busy}>{topic}</button>)}</div>
             <div className="mode-row">
-              {['Just listen', 'Help me reflect', 'Suggest a next step', 'Daily wellbeing guide'].map(
+              {['Just listen', 'Help me reflect', 'Suggest a next step'].map(
                 m => (
                   <button
                     className={mode === m ? 'chip selected' : 'chip'}
@@ -1040,7 +1012,7 @@ export default function App() {
               <textarea
                 aria-label="Chat message"
                 maxLength={6000}
-                placeholder="What’s on your mind?"
+                placeholder="What happened today? A small win, a hard moment, or something you’re still figuring out…"
                 value={draft}
                 onChange={e => setDraft(e.target.value)}
               />
@@ -1059,12 +1031,12 @@ export default function App() {
                 checked={include}
                 onChange={e => setInclude(e.target.checked)}
               />
-              Include saved entry in AI reflections and birthday message
+              Let AI use this saved entry for conversations and my birthday moment
             </label>
             <div className="modal-footer">
-              <small>Your words are saved only when you choose.</small>
+              <small>Write and save, or send to AI to explore it together.</small>
               <button className="primary" disabled={busy} onClick={saveEntry}>
-                Save reflection
+                Save journal entry
                 <Check size={16} />
               </button>
             </div>
@@ -1177,6 +1149,7 @@ export default function App() {
                 <X />
               </button>
             </div>
+            <p className="muted">🔒 Private unless you choose to share this entry.</p>
             <textarea
               aria-label="Edit entry text"
               className="editor"
@@ -1207,6 +1180,13 @@ export default function App() {
               Save changes
               <Check size={16} />
             </button>
+            <button className="secondary wide" style={{marginTop:12}} onClick={async () => {
+              if (!confirm('Share the text of this entry outside NextMe? Only this entry will be shared.')) return;
+              try {
+                if (navigator.share) await navigator.share({title:'A page from my journal', text:editing.text});
+                else { await navigator.clipboard.writeText(editing.text); setNotice('Entry copied. You choose where to paste it.'); }
+              } catch (e) { if (!(e instanceof Error && e.name === 'AbortError')) setError('Sharing was unavailable. You can select and copy the entry text.'); }
+            }}>Share this entry ↗</button>
           </section>
         </div>
       )}
@@ -1273,14 +1253,14 @@ export default function App() {
             {done
               ? 'Carry one small action into the days ahead.'
               : encounter.split(/\n\s*\n/)[
-                  Math.min(3, Math.floor(seconds / 75))
+                  Math.min(3, Math.floor(seconds / 15))
                 ] || encounter}
           </p>
           <div className="progress">
-            <span style={{ width: (seconds / 300) * 100 + '%' }} />
+            <span style={{ width: (seconds / 60) * 100 + '%' }} />
           </div>
           <span className="timer">
-            {Math.floor((300 - seconds) / 60)}:{String((300 - seconds) % 60).padStart(2, '0')} remaining
+            {Math.floor((60 - seconds) / 60)}:{String((60 - seconds) % 60).padStart(2, '0')} remaining
           </span>
           {!done && (
             <button
@@ -1307,9 +1287,9 @@ export default function App() {
               <ArrowRight size={16} />
             </button>
           )}
-          <BirthdayChat key={meetingExpiresAt} demo={demo} active={!done && seconds < 300} initialMessages={meetingMessages} />
+          <BirthdayChat key={meetingExpiresAt} demo={demo} active={!done && seconds < 60} initialMessages={meetingMessages} />
           <small>
-            A possibility, not a prediction. Your birthday meeting lasts five minutes.
+            A possibility, not a prediction. Your birthday meeting lasts one minute.
           </small>
           {error && (
             <p role="alert">
